@@ -105,7 +105,16 @@ export const extractSourceFilesDeps = (
     sourceFilterFn?: (sourceFileName: string) => boolean,
 ): Set<string> => {
     const dependantSourceFiles = new Set<string>();
-    const sourceMapsParsed = patchSourceMapSources(JSON.parse(sourceMaps), sourceRoot);
+
+    let sourceMapsParsed;
+    try {
+        sourceMapsParsed = patchSourceMapSources(JSON.parse(sourceMaps), sourceRoot);
+    } catch (error) {
+        const urls = coverages.map(c => c.url).filter(Boolean);
+        logger.error(`Selectivity: Error parsing source maps: ${error}`);
+        logger.error(`Selectivity: Source map URLs: ${JSON.stringify(urls)}`);
+        return dependantSourceFiles;
+    }
 
     const consumer = new SourceMapConsumer(sourceMapsParsed);
 
